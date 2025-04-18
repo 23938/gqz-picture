@@ -23,7 +23,6 @@ import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -131,6 +130,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
     }
 
+    /**
+     * 获取当前登录用户信息
+     * @param request
+     * @return
+     */
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 判断是否已经登录
@@ -158,9 +162,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             return null;
         }
-        UserVO userVOVo = new UserVO();
-        BeanUtils.copyProperties(user, userVOVo);
-        return userVOVo;
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
     }
 
     /**
@@ -195,6 +199,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginUserVo;
     }
 
+    /**
+     * 用户注销
+     * @param request
+     * @return
+     */
     @Override
     public boolean userLogout(HttpServletRequest request) {
         // 判断是否已经登录
@@ -235,6 +244,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.like(StrUtil.isNotBlank(userProfile), "userProfile", userProfile);
         queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
         return queryWrapper;
+    }
+
+    /**
+     * 判断是否为管理员
+     * @param user
+     * @return
+     */
+    @Override
+    public boolean isAdmin(User user) {
+        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
 
 }
