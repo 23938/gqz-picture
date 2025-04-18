@@ -1,6 +1,7 @@
 package com.gzu.gqzpicturebackend.controller;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gzu.gqzpicturebackend.annotation.AuthCheck;
 import com.gzu.gqzpicturebackend.common.BaseResponse;
 import com.gzu.gqzpicturebackend.common.DeleteRequest;
@@ -10,6 +11,7 @@ import com.gzu.gqzpicturebackend.exception.BusinessException;
 import com.gzu.gqzpicturebackend.exception.ErrorCode;
 import com.gzu.gqzpicturebackend.exception.ThrowUtils;
 import com.gzu.gqzpicturebackend.model.dto.picture.PictureEditRequest;
+import com.gzu.gqzpicturebackend.model.dto.picture.PictureQueryRequest;
 import com.gzu.gqzpicturebackend.model.dto.picture.PictureUploadRequest;
 import com.gzu.gqzpicturebackend.model.entity.Picture;
 import com.gzu.gqzpicturebackend.model.entity.User;
@@ -121,9 +123,76 @@ public class PictureController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR,"图片编辑失败");
         return ResultUtils.success(true);
     }
+    /**
+     * 根据id获取图片(仅管理员可用)
+     * @param id
+     * @return
+     */
+    @PostMapping("/get")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Picture> getPictureById(long id){
+        // 判断id是否有效
+        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 判断图片是否存在
+        Picture picture = pictureService.getById(id);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        return ResultUtils.success(picture);
+    }
 
     /**
+     * 根据id获取图片(封装类)
+     * @param id
+     * @param request
+     * @return
+     */
+    @PostMapping("/get/vo")
+    public BaseResponse<PictureVO> getPictureVOById(long id, HttpServletRequest request){
+        // 判断id是否有效
+        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 判断图片是否存在
+        Picture picture = pictureService.getById(id);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 获取VO
+        PictureVO pictureVO = pictureService.getPictureVO(picture, request);
+        return ResultUtils.success(pictureVO);
+    }
+    /**
+     * 分页获取图片列表(仅管理员可用)
+     * @param pictureQueryRequest
+     * @return
+     */
+    @PostMapping("/list/page")
+    public BaseResponse<Page<Picture>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest){
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 查询数据库
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+                pictureService.getQueryWrapper(pictureQueryRequest));
+        return ResultUtils.success(picturePage);
+    }
+
+    /**
+     * 分页获取图片列表(封装类)
      *
+     * @param pictureQueryRequest
+     * @return
+     */
+    @PostMapping("/list/page/vo")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Page<PictureVO>> listPictureByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                           HttpServletRequest request){
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 查询数据库
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+                pictureService.getQueryWrapper(pictureQueryRequest));
+        return ResultUtils.success(pictureService.getPictureVOPage(picturePage,request));
+    }
+
+    /**
+     * 标签和分类
      * @param request
      * @return
      */
