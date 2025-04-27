@@ -1,5 +1,6 @@
 package com.gzu.gqzpicturebackend.manage;
 
+import cn.hutool.core.io.FileUtil;
 import com.gzu.gqzpicturebackend.config.CosClientConfig;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.COSObject;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CosManager {
@@ -62,9 +65,39 @@ public class CosManager {
         PicOperations picOperations = new PicOperations();
         // 1 表示返回图片信息，0 表示不返回
         picOperations.setIsPicInfo(1);
-        // 构造处理参数
-        putObjectRequest.setPicOperations(picOperations);
+        // 图片处理规则
+        List<PicOperations.Rule> rules = new ArrayList<>();
+        // 1. 图片压缩（转成 webp 格式）
+        String webpKey = FileUtil.mainName(key) + ".webp";
+        PicOperations.Rule compressRule = new PicOperations.Rule();
+        compressRule.setFileId(webpKey);
+        compressRule.setBucket(cosClientConfig.getBucket());
+        compressRule.setRule("imageMogr2/format/webp");
+        rules.add(compressRule);
 
+        // 2. 缩略图处理,仅对 > 20 KB 的图片进行缩略图处理
+        if (file.length() > 2 * 1024) {
+            PicOperations.Rule thumbnailRule = new PicOperations.Rule();
+            // 拼接缩略图路径
+            String thumbnailKey = FileUtil.mainName(key) + "_thumbnail." + FileUtil.getSuffix(key);
+            thumbnailRule.setFileId(thumbnailKey);
+            thumbnailRule.setBucket(cosClientConfig.getBucket());
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%s*%s>", 256, 256));
+            rules.add(thumbnailRule);
+        }
+
+        // 构造处理参数
+        picOperations.setRules(rules);
+        putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
+    }
+
+    /**
+     * 删除对象
+     * @param key
+     * @return
+     */
+    public void deleteObject(String key) {
+        cosClient.deleteObject(cosClientConfig.getBucket(), key);
     }
 }

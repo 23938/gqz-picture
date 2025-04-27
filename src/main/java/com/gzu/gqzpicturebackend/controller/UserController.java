@@ -165,7 +165,7 @@ public class UserController {
      * 此方法用于处理用户信息的分页查询请求，将查询到的用户信息转换为用户VO，
      * 并以分页的形式返回给调用者
      */
-    @PostMapping("/lisy/page/vo")
+    @PostMapping("/list/page/vo")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest){
         // 检查请求参数是否为空，如果为空则抛出参数错误异常

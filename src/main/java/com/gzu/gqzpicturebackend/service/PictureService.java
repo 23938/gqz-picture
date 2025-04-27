@@ -3,6 +3,8 @@ package com.gzu.gqzpicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gzu.gqzpicturebackend.model.dto.picture.PictureQueryRequest;
+import com.gzu.gqzpicturebackend.model.dto.picture.PictureReviewRequest;
+import com.gzu.gqzpicturebackend.model.dto.picture.PictureUploadByBatchRequest;
 import com.gzu.gqzpicturebackend.model.dto.picture.PictureUploadRequest;
 import com.gzu.gqzpicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -22,12 +24,12 @@ public interface PictureService extends IService<Picture> {
 
     /**
      * 上传图片
-     * @param multipartFile
+     * @param inputSource
      * @param pictureUploadRequest
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest,
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest,
                            User loginUser);
 
     /**
@@ -59,4 +61,41 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     void validPicture(Picture picture);
+
+    /**
+     * 审核图片
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
+     * 填充审核参数
+     * @param picture
+     * @param loginUser
+     */
+    void fillReviewParams(Picture picture, User loginUser);
+
+
+    /**
+     * 批量上传图片
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return
+     */
+    Integer uploadPictureByBatch (PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
+    /**
+     * 分页查询图片
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    Page<PictureVO> listPictureVOByPageWithCache (PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 清理图片文件
+     * @param oldPicture
+     */
+    void cleanPictureFile(Picture oldPicture);
 }
