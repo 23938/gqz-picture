@@ -74,7 +74,17 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      * 用户 id
      */
     private Long userId;
-    private static final long serialVersionUID = 1L;
+
+    /**
+     * 空间 id
+     */
+    private Long spaceId;
+
+    /**
+     * 空间 id 为空时，搜索所有图片
+     */
+    private boolean nullSpaceId;
+
 
     /**
      * 状态：0-待审核; 1-通过; 2-拒绝
@@ -95,4 +105,6 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      * 审核时间
      */
     private Date reviewTime;
+
+    private static final long serialVersionUID = 1L;
 }
